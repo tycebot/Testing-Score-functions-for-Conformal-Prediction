@@ -1,0 +1,43 @@
+---
+title: "Conformal Practice"
+author: "Terrell Enoru"
+date: "2025-09-12"
+output: html_document
+---
+0. Fitting the Model
+```{r}
+
+```
+
+
+1. The residual score
+```{r}
+#creating prediction set
+
+#Graphing X,Y, and prediction set(shaded bands)
+
+```
+
+2. The scaled residual score
+```{r}
+#creating prediction set
+
+#Graphing X,Y, and prediction set(shaded bands)
+
+```
+
+3. The conformalized Quantile Regression Score
+```{r}
+#creating prediction set
+
+#Graphing X,Y, and prediction set(shaded bands)
+
+```
+4. The high probability score
+```{r}
+#creating prediction set
+
+#Graphing X,Y, and prediction set(shaded bands)
+```
+
+4. Adaptive Prediciton Sets
