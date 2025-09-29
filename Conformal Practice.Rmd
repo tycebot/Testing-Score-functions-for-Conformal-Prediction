@@ -4,18 +4,44 @@ author: "Terrell Enoru"
 date: "2025-09-12"
 output: html_document
 ---
-0. Fitting the Model
-```{r}
-
+Installing Packages and setting coverage rate
+```{r warning=F}
+library(tidyverse)
+library(rsample)
+ALPHAA<-0.05
+mypenguins<-penguins |> 
+  filter(!is.na(body_mass) & !is.na(flipper_len))
+n_pen<-nrow(mypenguins)
 ```
-
+We will set a=0.05 for a desired coverage of 95%
 
 1. The residual score
 ```{r}
+set.seed(123)
 #creating prediction set
 
-#Graphing X,Y, and prediction set(shaded bands)
+#1 Use half of dataset to construct a conformal score function(in this case the absolute value of the residuals are the score) this is called the training set
+all_penguins<-initial_split(mypenguins,prop=0.5)
+train_penguins<-training(all_penguins)
+calbration_penguins<-testing(all_penguins)
+fit_penguins<-lm(data=train_penguins,body_mass~flipper_len)
 
+#2 Use model from training set and data from other half to compute compute the score(in this case the score is residuals) the data from the other half is called the calibration set
+predict_pen<-predict(object=fit_penguins,newdata=calbration_penguins)
+score<-abs(predict_pen-calbration_penguins$body_mass)
+
+#3 Sort second half of scores in increasing order and let the threshold be the [(1-a)(n/2 +1)]th element in the sorted list
+sorted_score<-sort(score)
+n_score<-length(score)
+threshold_position<-ceiling((1-ALPHAA)*((n_pen/2)+1))
+threshold<-sorted_score[threshold_position]
+
+#4 Return the prediction interval which is made up of all the values less than or equal to the threshold
+pred_lower_bound<- predict_pen-threshold
+pred_upper_bound<- predict_pen+threshold
+#Graphing X,Y, and prediction set(shaded bands)
+interval_df<-df(lower_bound=pred_lower_bound,
+                upper_bound=pred_upper_bound)
 ```
 
 2. The scaled residual score
@@ -40,4 +66,4 @@ output: html_document
 #Graphing X,Y, and prediction set(shaded bands)
 ```
 
-4. Adaptive Prediciton Sets
+4. Adaptive Prediction Sets
