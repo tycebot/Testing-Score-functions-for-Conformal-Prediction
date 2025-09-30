@@ -13,7 +13,7 @@ mypenguins<-penguins |>
   filter(!is.na(body_mass) & !is.na(flipper_len))
 n_pen<-nrow(mypenguins)
 ```
-We will set a=0.05 for a desired coverage of 95%
+We will set a=0.05 for a desired coverage of 95%. Also due to the limited data
 
 1. The residual score
 ```{r}
@@ -52,10 +52,42 @@ ggplot(calibration_penguins,aes(flipper_len,body_mass))+
 
 2. The scaled residual score
 ```{r}
+set.seed(123)
 #creating prediction set
 
-#Graphing X,Y, and prediction set(shaded bands)
+#1 Use half of dataset to construct a conformal score function(in this case the absolute value of the residuals are the score) this is called the training set
+all_penguins<-initial_split(mypenguins,prop=0.5)
+train_penguins<-training(all_penguins)
+calibration_penguins<-testing(all_penguins)
+fit_penguins<-lm(data=train_penguins,body_mass~flipper_len)
 
+#estimating sd
+train_predictions<- predict(fit_penguins,newdata = train_penguins)
+abs_resids<- abs(train_penguins$body_mass-train_predictions)
+sd_estimate<-lm(data=train_penguins,abs_resids~flipper_len)
+#2 Use model from training set and data calibration set to compute compute the score(in this case the score is residuals).
+predict_pen<-predict(object=fit_penguins,newdata=calibration_penguins)
+penguin_sd<-predict(sd_estimate,newdata = calibration_penguins)
+score<-abs((predict_pen-calibration_penguins$body_mass)/penguin_sd)
+
+#3 Sort scores in increasing order and let the threshold be the [(1-a)(n/2 +1)]th element in the sorted list(round up because its an index and rounding up keeps coverage gurantee)
+sorted_score<-sort(score)
+n_score<-length(score)
+threshold_position<-ceiling((1-ALPHAA)*((n_pen/2)+1))
+threshold<-sorted_score[threshold_position]
+
+#4 Return the prediction interval which is predicted values plus and mines threshold score
+pred_lower_bound<- predict_pen-threshold*penguin_sd
+pred_upper_bound<- predict_pen+threshold*penguin_sd
+interval_df<-data.frame(lower_bound=pred_lower_bound,
+                upper_bound=pred_upper_bound)
+
+#Graphing X,Y, and prediction set(shaded bands)
+ggplot(calibration_penguins,aes(flipper_len,body_mass))+
+  geom_point()+
+  geom_line(aes(y=predict_pen),color="black",size=1)+
+  geom_ribbon(aes(ymin=pred_lower_bound,ymax = pred_upper_bound),
+              alpha=0.2,fill="yellow")
 ```
 
 3. The conformalized Quantile Regression Score
