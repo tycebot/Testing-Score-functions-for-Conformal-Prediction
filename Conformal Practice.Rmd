@@ -23,25 +23,31 @@ set.seed(123)
 #1 Use half of dataset to construct a conformal score function(in this case the absolute value of the residuals are the score) this is called the training set
 all_penguins<-initial_split(mypenguins,prop=0.5)
 train_penguins<-training(all_penguins)
-calbration_penguins<-testing(all_penguins)
+calibration_penguins<-testing(all_penguins)
 fit_penguins<-lm(data=train_penguins,body_mass~flipper_len)
 
-#2 Use model from training set and data from other half to compute compute the score(in this case the score is residuals) the data from the other half is called the calibration set
-predict_pen<-predict(object=fit_penguins,newdata=calbration_penguins)
-score<-abs(predict_pen-calbration_penguins$body_mass)
+#2 Use model from training set and data calibration set to compute compute the score(in this case the score is residuals).
+predict_pen<-predict(object=fit_penguins,newdata=calibration_penguins)
+score<-abs(predict_pen-calibration_penguins$body_mass)
 
-#3 Sort second half of scores in increasing order and let the threshold be the [(1-a)(n/2 +1)]th element in the sorted list
+#3 Sort scores in increasing order and let the threshold be the [(1-a)(n/2 +1)]th element in the sorted list(round up because its an index and rounding up keeps coverage gurantee)
 sorted_score<-sort(score)
 n_score<-length(score)
 threshold_position<-ceiling((1-ALPHAA)*((n_pen/2)+1))
 threshold<-sorted_score[threshold_position]
 
-#4 Return the prediction interval which is made up of all the values less than or equal to the threshold
+#4 Return the prediction interval which is predicted values plus and mines threshold score
 pred_lower_bound<- predict_pen-threshold
 pred_upper_bound<- predict_pen+threshold
-#Graphing X,Y, and prediction set(shaded bands)
-interval_df<-df(lower_bound=pred_lower_bound,
+interval_df<-data.frame(lower_bound=pred_lower_bound,
                 upper_bound=pred_upper_bound)
+
+#Graphing X,Y, and prediction set(shaded bands)
+ggplot(calibration_penguins,aes(flipper_len,body_mass))+
+  geom_point()+
+  geom_line(aes(y=predict_pen),color="black",size=1)+
+  geom_ribbon(aes(ymin=pred_lower_bound,ymax = pred_upper_bound),
+              alpha=0.2,fill="yellow")
 ```
 
 2. The scaled residual score
