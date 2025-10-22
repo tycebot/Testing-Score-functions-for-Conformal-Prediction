@@ -15,7 +15,13 @@ n_pen<-nrow(mypenguins)
 ```
 CREATE VALIDATION SET to test 
 We will set a=0.05 for a desired coverage of 95%. Also due to the limited data
+--Simulations 
+The general idea behind the simulation is that I want to check the coverage gurantee.So I want to generate some data
+y=b0+b1x
+construct intervals for test set and see how many contain true value
+reference the midterm question the nuse conformal for creating hte intervals
 
+real simulation
 --Conclusions
 For the scaled residual score by including sd estimate in our calculations we can get smaller bands for lower deviations and larger bands for larger deviations(eg the width of the confidence interval is adaptive based on the spread of the data)
 1. The residual score
